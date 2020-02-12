@@ -1,0 +1,12 @@
+Header:key:value
+
+Logging{LogFilePath:c:\staging\TabletValidation.log}
+Applications{DockScanAppVersion:3.4.9,My-T-SoftInstaller:1.90.3,FLS100:1.3.9,RescueAssist by LogMeIn Unattended:1.0.0.341}
+
+
+
+Offsets
+0 -> 1,2
+3 -> 4,5
+6 -> 7,8,9  -- last match has to get last element using length
+
