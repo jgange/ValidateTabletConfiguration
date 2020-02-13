@@ -4,13 +4,16 @@ $TestResults = @()
 $ExecutionStart = Get-Date
 $ResultsFileMode = '-Append'
 $TestResultStatus = @('Test Passed','Test Failed')
-$ResultFields = @('TestName','Description','Result','Message','TimeStamp')
+$ResultFields = @('TestName','Description','Result','Message','TimeStamp','Category')
 $ResultSet = @()
+$HostName = $env:COMPUTERNAME
+$CurrentUser = $env:USERNAME
+$LogonDomain = $env:USERDOMAIN
 
 # General File Path Data
 
 $StagingFolder = 'C:\Staging\'
-$ResultsFile = $StagingFolder + $env:COMPUTERNAME + '_DockAutoTests.csv'
+$ResultsFile = $StagingFolder + $HostName + '_DockAutoTests.csv'
 $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
 
 # Application Checks - version and installation
@@ -34,25 +37,36 @@ $AveryScaleAppVer = $StartUpFolder + 'FLS100.lnk'
 
 # Registry Key Values -- * indicates a replacement is going to occur such as a user name or password
 
-$AutoLogonSetting = @('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon','AutoAdminLogon',1)
-$AutoLogonAccount = @('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon','DefaultDomainName','paradise')
-$AutoLogonAccount = @('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon','DefaultUserName','*username')
-$AutoLogonAccount = @('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon','DefaultPassword','*password')
+$AutoLogonSetting = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='AutoAdminLogon';KeyValue=1}
+$AutoLogonDomain = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';Keyname='DefaultDomainName';KeyValue='paradise'}
+$AutoLogonAccount = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='DefaultUserName';KeyValue='*username'}
+$AutoLogonPassword = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='DefaultPassword';KeyValue='*password'}
 
-$ScannerPortEnabled = @('HKLM:SOFTWARE\Wow6432Node\Intermec\ADCPorts\2','State',1)
+$TestRegistryValue = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Robert';KeyName='DefaultPassword';KeyValue='*password'}
+
+$ScannerPortEnabled = @{RegPath='HKLM:SOFTWARE\Wow6432Node\Intermec\ADCPorts\2';KeyName='State';KeyValue=1}
+
+# Account Information
+
+$Logons = @('svc_dockatl','svc_dockchi','svc_dockchr','svc_dockcin','svc_dockclv','svc_dockcom','svc_dockdet','svc_dockdls','svc_dockopt','svc_dockhou','svc_dockind','svc_docklax','svc_docklou','svc_dockopt','svc_dockmps','svc_docknsh','svc_docksea','svc_docksfs','svc_dockstl','svc_dockstp')
+$Pswds = @('hG#xh7GaS2VLLYenOdWLvgDs28BJPJ9y','B59jdq6e45V63PhpvAnEaAAUn3WFDX','gn1MjmCJVW8LY2PQDs44GsRL2wHE0t','aRCbNN7sjT2mMdaFambLL8yo5EDvZt','mweMXzfmjofPKQ7gaFP5Yc01MR7q9z','fDs=^J^)rPk@6Unth_zY0xhKc:a0Z:D6','3JAcCk8BHEcV0xodg3YykWepKGTk5q','uuWgjY={=ki3','R1853:A*feR58kH','7ubohwWsWfYy','5eo9cHsjxFf7x022RTwnQzQi2FbPqV','d!UMMn6Tb^dC','EquPh4WhwnahGCpjBcEpocsAA4n37x','R1853:A*feR58kH','WUu1zdKdgw5CXJ7cAgwQCbsogaucJC','Uhd79e6EDshKT2rjbvTFbpbTG7vYFs','r1VkNEarBzTQfJwrN1C9oj1L7Q93RJ','EDE5oTvQw5KEFtp0A0VpRWu7tgcsb9','NzhC1Ec97v1GyFMfa5rF2rxxPXWs9g','G29tCJkzdg8PbZKwYbWX5rZcag68kf')
+$LocalAdminUsers = @('LAX_ADMIN','DOCK_ADMIN','MKE_ADMIN')
+$Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout','indt','laxt','lout','mket','mpst','nsht','seat','sfst','stlt','stpt')
 
 
+# Testing Data to override variables
 
+$HostName = 'ALTT0003'
+$UserName = 'svc_dockatl'
 
 ############## FUNCTION DEFINITIONS #############################################
 
 ### UTILITY FUNCTIONS ######
 
-Function WriteResults($DataSet)
+Function WriteTestResults($DataSet)
 {
-    $Dataset
     $Output += New-Object PSObject -Property $DataSet
-    $Output | Export-Csv -NoTypeInformation -Path $ResultsFile
+    Export-Csv -InputObject $Output -NoTypeInformation -Append -Path $ResultsFile
     $Output = $null
 }
 
@@ -68,10 +82,27 @@ Function ScheduleTestRun()
     # Stub
 }
 
+Function UpdateAccountCredentials()
+{
+    # This function is required in order to update the default value for the username and password for the Autologon settings since they must be discovered at run time
+    $SitePrefix = $HostName.Substring(0,4).ToLower()
+    $SiteName = $Sites -eq $SitePrefix
+    $MatchIndex = (0..($Sites.Count-1)) | where {$Sites[$_] -eq $SitePrefix}
+    $MatchIndex
+    $UserName = $Logon[$MatchIndex]
+    $PassWord = $Pswd[$MatchIndex]
+
+    $SitePrefix
+    $SiteName
+    $UserName
+    $PassWord
+}
+
+
 
 ########## TEST FUNCTIONS ######################
 
-Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$AccessType)
+Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$AccessType, [string]$Category)
 {
     $DataSet = @{}
     
@@ -102,17 +133,99 @@ Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$Acces
     $Description = 'Checking file permissions for account ' + $Account + ' on the ' + $Folder + ' where the expected Access level is ' + $AccessType
     $TimeStamp = Get-Date
     
-    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description}
-    WriteResults $DataSet
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    
+    WriteTestResults $DataSet
  
 }
 
 
+Function CheckRegistryStatus($RegistryEntry, [string]$Category)
+{
+   
+    $DataSet = @{}
+    
+    Try
+    {
+        $CheckKey = (Get-ItemPropertyValue -Path $RegistryEntry["RegPath"] -Name $RegistryEntry["KeyName"] -ErrorAction Stop)
+
+        If ($CheckKey -eq $RegistryEntry["KeyValue"])
+        {
+            $Result = 'Test Passed'
+            $Message = 'Registry key ' + $RegistryEntry["RegPath"] + '\' + $RegistryEntry["KeyName"] + ' has the proper value of ' + $RegistryEntry["KeyValue"] + '.'
+        }
+        Else
+        {
+            $Result = 'Test Failed'
+            $Message = 'Registry key ' + $RegistryEntry["RegPath"] + '\' + $RegistryEntry["KeyName"] + ' has the incorrect value of ' + $CheckKey + ' instead of ' + $RegistryEntry["KeyValue"] + '.'
+        }
+    }
+    Catch
+    {
+        $Result = 'Test Failed'
+        $Message = $_.Exception
+    }
 
 
+    $TestName = 'Check value of registry key ' + $RegistryEntry["RegPath"] + '\' + $RegistryEntry["KeyName"]
+    $Description = 'Checking registry key ' + $RegistryEntry["RegPath"] + '\' + $RegistryEntry["KeyName"] + ' for the value ' + $RegistryEntry["KeyValue"]
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+
+
+Function ValidateLoggedInUser([string] $Category)
+{
+    if ($UserName -match $LocalAdminUsers)
+    {
+        $Result = 'Test Failed'
+        $Message = 'A local administrator account is currently logged into this tablet.'
+    }
+    if ($UserName.Substring(($UserName.Length-3),3) -eq $HostName.Substring(0,3))
+    {
+        $Result = 'Test Passed'
+        $Message = 'The account ' + $UserName + ' is currently logged into this machine with the site prefix ' + $HostName.Substring(0,3) + ' which is a match.' 
+    }   
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'The currently logged in user account on this tablet is ' + $UserName + ' which does not match the three digit site prefix from the machine name of ' + $HostName.Substring(0,3) + '.'
+    }
+
+    $TestName = 'Validate logged-in service account matches Site prefix of Tablet'
+    $Description = 'The user logged into the tablet should be using a service account of the form svc_dock<site prefix> where the site prefix is the first three characters of the machine name.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+
+Function ValidateAutoLoginStatus
+{
+    $UserName
+    $LogonDomain
+
+
+
+}
+
+Function ServiceAccountIsLocalUser
+{
+    Get-LocalGroupMember -Group "Administrators" -Member $UserName
+}
 
 ###################### MAIN PROGRAM ####################################################
 
-CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl"
 
 $RunTime = GetRunTime $ExecutionStart (Get-Date)
+
+UpdateAccountCredentials
+
+#CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
+#CheckRegistryStatus $AutoLogonSetting "Autologon" | Out-Null
+#CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
+#ValidateLoggedInUser "Login Credentials"
