@@ -64,6 +64,18 @@ $UserName = 'svc_dockchr'
 
 ### UTILITY FUNCTIONS ######
 
+Function Initialize()
+{
+    # This function sets up any necessary structures in case they are not present.
+    if (!(Test-Path $StagingFolder))
+    {
+        New-Item -Path $StagingFolder -ItemType "directory"
+    }
+
+    # Other initialization code here
+
+}       
+
 Function WriteTestResults($DataSet)
 {
     $Output += New-Object PSObject -Property $DataSet
@@ -240,6 +252,7 @@ Function IsServiceAccountLocalUser()
 
 $RunTime = GetRunTime $ExecutionStart (Get-Date)
 
+Initialize
 UpdateAccountCredentials
 
 #CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
