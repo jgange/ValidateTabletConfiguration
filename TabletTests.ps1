@@ -9,6 +9,7 @@ $ResultSet = @()
 $HostName = $env:COMPUTERNAME
 $CurrentUser = $env:USERNAME
 $LogonDomain = $env:USERDOMAIN
+$LocalGroupName = 'Administrators'
 
 # General File Path Data
 
@@ -56,8 +57,8 @@ $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout'
 
 # Testing Data to override variables
 
-$HostName = 'ALTT0003'
-$UserName = 'svc_dockatl'
+$HostName = 'CHRT0003'
+$UserName = 'svc_dockchr'
 
 ############## FUNCTION DEFINITIONS #############################################
 
@@ -87,15 +88,13 @@ Function UpdateAccountCredentials()
     # This function is required in order to update the default value for the username and password for the Autologon settings since they must be discovered at run time
     $SitePrefix = $HostName.Substring(0,4).ToLower()
     $SiteName = $Sites -eq $SitePrefix
-    $MatchIndex = (0..($Sites.Count-1)) | where {$Sites[$_] -eq $SitePrefix}
-    $MatchIndex
-    $UserName = $Logon[$MatchIndex]
-    $PassWord = $Pswd[$MatchIndex]
 
-    $SitePrefix
-    $SiteName
-    $UserName
-    $PassWord
+    $MatchIndex = (0..($Sites.Count-1)) | where {$Sites[$_] -eq $SitePrefix}
+    $UserName = $Logons[$MatchIndex]
+    $PassWord = $Pswds[$MatchIndex]
+
+    $AutoLogonAccount["KeyValue"] = $UserName
+    $AutoLogonPassword["KeyValue"] = $PassWord
 }
 
 
@@ -209,13 +208,31 @@ Function ValidateAutoLoginStatus
     $UserName
     $LogonDomain
 
-
+    
 
 }
 
-Function ServiceAccountIsLocalUser
+Function IsServiceAccountLocalUser()
 {
-    Get-LocalGroupMember -Group "Administrators" -Member $UserName
+    try
+    {
+        Get-LocalGroupMember -Group $LocalGroupName -Member $AutoLogonAccount["KeyValue"]
+        $Result = 'Test Failed'
+        $Message = 'The user account ' + $AutoLogonAccount["KeyValue"] + ' is a member of the ' + $LocalGroupName + ' group.'
+    }
+    catch [Microsoft.PowerShell.Commands.PrincipalNotFoundException]
+    {
+        $Result = 'Test Passed'
+        $Message = 'The user account ' + $AutoLogonAccount["KeyValue"] + ' is not a member of the ' + $LocalGroupName + ' group.'
+    }
+
+    $TestName = 'Check if service account user is a member of the local administrators group'
+    $Description = 'The user logged into the tablet should not be a member of the local administrators group.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
 }
 
 ###################### MAIN PROGRAM ####################################################
@@ -229,3 +246,5 @@ UpdateAccountCredentials
 #CheckRegistryStatus $AutoLogonSetting "Autologon" | Out-Null
 #CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
 #ValidateLoggedInUser "Login Credentials"
+
+IsServiceAccountLocalUser
