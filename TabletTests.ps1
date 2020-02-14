@@ -226,7 +226,7 @@ Function IsServiceAccountLocalUser([string] $Category)
 {
     try
     {
-        Get-LocalGroupMember -Group $LocalGroupName -Member $AutoLogonAccount["KeyValue"]
+        Get-LocalGroupMember -Group $LocalGroupName -Member $AutoLogonAccount["KeyValue"] -ErrorAction Stop
         $Result = 'Test Failed'
         $Message = 'The user account ' + $AutoLogonAccount["KeyValue"] + ' is a member of the ' + $LocalGroupName + ' group.'
     }
@@ -259,4 +259,4 @@ UpdateAccountCredentials
 #ValidateLoggedInUser "Login Credentials"
 
 IsServiceAccountLocalUser "Security"
-ValidateAutoLogonStatus "Autologon"
+ValidateAutoLoginStatus "Autologon"
