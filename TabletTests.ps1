@@ -110,9 +110,6 @@ Function UpdateAccountCredentials()
 }
 
 
-
-########## TEST FUNCTIONS ######################
-
 Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$AccessType, [string]$Category)
 {
     $DataSet = @{}
@@ -188,6 +185,8 @@ Function CheckRegistryStatus($RegistryEntry, [string]$Category)
 }
 
 
+########## TEST FUNCTIONS ######################
+
 Function ValidateLoggedInUser([string] $Category)
 {
     if ($UserName -match $LocalAdminUsers)
@@ -215,7 +214,7 @@ Function ValidateLoggedInUser([string] $Category)
 
 }
 
-Function ValidateAutoLoginStatus
+Function ValidateAutoLoginStatus([string] $Category)
 {
     CheckRegistryStatus $AutoLogonSetting "Autologon" | Out-Null
     CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
@@ -260,3 +259,4 @@ UpdateAccountCredentials
 #ValidateLoggedInUser "Login Credentials"
 
 IsServiceAccountLocalUser "Security"
+ValidateAutoLogonStatus "Autologon"
