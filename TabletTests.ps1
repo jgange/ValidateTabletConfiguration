@@ -109,7 +109,7 @@ Function UpdateAccountCredentials()
 
 Function CheckIfFileExists([string]$FilePath, [string]$Category)
 {
-    If ((Test-Path($FilePath))
+    If (Test-Path $FilePath)
     {
         $Result = 'Test Passed'
         $Message = 'Filepath ' + $FilePath + ' exists on the tablet.'
