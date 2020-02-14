@@ -217,14 +217,13 @@ Function ValidateLoggedInUser([string] $Category)
 
 Function ValidateAutoLoginStatus
 {
-    $UserName
-    $LogonDomain
-
-    
-
+    CheckRegistryStatus $AutoLogonSetting "Autologon" | Out-Null
+    CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
+    CheckRegistryStatus $AutoLogonAccount "Autologon" | Out-Null
+    CheckRegistryStatus $AutoLogonPassWord "Autologon" | Out-Null
 }
 
-Function IsServiceAccountLocalUser()
+Function IsServiceAccountLocalUser([string] $Category)
 {
     try
     {
@@ -260,4 +259,4 @@ UpdateAccountCredentials
 #CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
 #ValidateLoggedInUser "Login Credentials"
 
-IsServiceAccountLocalUser
+IsServiceAccountLocalUser "Security"
