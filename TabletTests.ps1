@@ -236,7 +236,7 @@ Function IsServiceAccountLocalUser([string] $Category)
         $Message = 'The user account ' + $AutoLogonAccount["KeyValue"] + ' is not a member of the ' + $LocalGroupName + ' group.'
     }
 
-    $TestName = 'Check if service account user is a member of the local administrators group'
+    $TestName = 'Check if service account user is not a member of the local administrators group'
     $Description = 'The user logged into the tablet should not be a member of the local administrators group.'
     $TimeStamp = Get-Date
 
