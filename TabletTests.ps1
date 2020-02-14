@@ -33,8 +33,7 @@ $DockScanProgram = 'C:\Program Files\DockScanning Windows Manufacturer\DockScann
 $DockScanLogFolder = 'C:\Program Files\DockScanning Windows Manufacturer\DockScanning Windows\Logs\'
 $AveryDB = 'C:\ProgramData\Avery Weigh-Tronix\FLS 100\1.3.9.0\'
 $DockScanShortcut = $StartUpFolder + 'DockScanning Windows.lnk'
-$AveryScaleAppVer = $StartUpFolder + 'FLS100.lnk'
-
+$AveryScaleAppShortcut = $StartUpFolder + 'FLS100.lnk'
 
 # Registry Key Values -- * indicates a replacement is going to occur such as a user name or password
 
@@ -42,8 +41,6 @@ $AutoLogonSetting = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersio
 $AutoLogonDomain = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';Keyname='DefaultDomainName';KeyValue='paradise'}
 $AutoLogonAccount = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='DefaultUserName';KeyValue='*username'}
 $AutoLogonPassword = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='DefaultPassword';KeyValue='*password'}
-
-$TestRegistryValue = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Robert';KeyName='DefaultPassword';KeyValue='*password'}
 
 $ScannerPortEnabled = @{RegPath='HKLM:SOFTWARE\Wow6432Node\Intermec\ADCPorts\2';KeyName='State';KeyValue=1}
 
@@ -59,6 +56,7 @@ $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout'
 
 $HostName = 'CHRT0003'
 $UserName = 'svc_dockchr'
+$TestRegistryValue = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Robert';KeyName='DefaultPassword';KeyValue='*password'}
 
 ############## FUNCTION DEFINITIONS #############################################
 
@@ -109,8 +107,30 @@ Function UpdateAccountCredentials()
     $AutoLogonPassword["KeyValue"] = $PassWord
 }
 
+Function CheckIfFileExists([string]$FilePath, [string]$Category)
+{
+    If ((Test-Path($FilePath))
+    {
+        $Result = 'Test Passed'
+        $Message = 'Filepath ' + $FilePath + ' exists on the tablet.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Filepath ' + $FilePath + ' was not found.'
+    }
 
-Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$AccessType, [string]$Category)
+    $TestName = 'Check Existence of ' + $FilePath
+    $Description = 'Checking for existence of filepath ' + $FilePath + ' on the device.'
+    $TimeStamp = Get-Date
+    
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    
+    WriteTestResults $DataSet
+
+}
+
+Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$AccessType, [string]$Category) #Modify this to the use hash tables like the Registry entries
 {
     $DataSet = @{}
     
@@ -259,3 +279,5 @@ CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Applicati
 ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
+CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
+CheckIfFileExists $AveryConfigFile "Avery Scale Software"
