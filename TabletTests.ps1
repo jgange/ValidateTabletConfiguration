@@ -253,10 +253,9 @@ $RunTime = GetRunTime $ExecutionStart (Get-Date)
 Initialize
 UpdateAccountCredentials
 
-#CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
-#CheckRegistryStatus $AutoLogonSetting "Autologon" | Out-Null
-#CheckRegistryStatus $AutoLogonDomain "Autologon" | Out-Null
-#ValidateLoggedInUser "Login Credentials"
+# Begin Test Run
 
+CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
+ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
