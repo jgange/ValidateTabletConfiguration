@@ -217,7 +217,7 @@ Function CheckRegistryStatus($RegistryEntry, [string]$Category)
 
 Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus, [string]$Category)
 {
-    $CurrentServiceState = (Get-Service -DisplayName).Status
+    $CurrentServiceState = (Get-Service -DisplayName $ServiceName).Status
     if ($CurrentServiceState -eq $ExpectedStatus)
     {
         $Result = 'Test Passed'
