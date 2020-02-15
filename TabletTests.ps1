@@ -44,6 +44,11 @@ $AutoLogonPassword = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersi
 
 $ScannerPortEnabled = @{RegPath='HKLM:SOFTWARE\Wow6432Node\Intermec\ADCPorts\2';KeyName='State';KeyValue=1}
 
+# Running services
+
+$RemoteRegistryService = 'Remote Registry'
+
+
 # Account Information
 
 $Logons = @('svc_dockatl','svc_dockchi','svc_dockchr','svc_dockcin','svc_dockclv','svc_dockcom','svc_dockdet','svc_dockdls','svc_dockopt','svc_dockhou','svc_dockind','svc_docklax','svc_docklou','svc_dockopt','svc_dockmps','svc_docknsh','svc_docksea','svc_docksfs','svc_dockstl','svc_dockstp')
@@ -210,7 +215,7 @@ Function CheckRegistryStatus($RegistryEntry, [string]$Category)
 
 }
 
-Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus)
+Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus, [string]$Category)
 {
     $CurrentServiceState = (Get-Service -DisplayName).Status
     if ($CurrentServiceState -eq $ExpectedStatus)
@@ -312,6 +317,7 @@ ValidateAutoLoginStatus "Autologon"
 CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Software"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
+CheckServiceStatus $RemoteRegistryService "Running" "RemoteAccess"
 
 $ExecutionEnd = Get-Date
 $ElaspedTime = GetRunTime $ExecutionEnd $ExecutionStart
