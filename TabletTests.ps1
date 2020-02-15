@@ -70,6 +70,11 @@ Function Initialize()
         New-Item -Path $StagingFolder -ItemType "directory"
     }
 
+    # Update any run-time variables
+
+    $Global:AveryConfigFile = 'C:\Users\' + $AutoLogonAccount["KeyValue"] + $Global:AveryConfigFile
+
+    
     # Other initialization code here
 
 }       
@@ -84,7 +89,8 @@ Function WriteTestResults($DataSet)
 
 Function GetRunTime($StartTime, $FinishTime)
 {
-    return ($FinishTime - $StartTime).Seconds
+    $ElaspedTime = ($FinishTime - $StartTime).Seconds
+    Write-Host "Script run time was $($ElaspedTime)"
 }
 
 
@@ -270,21 +276,21 @@ Function IsServiceAccountLocalUser([string] $Category)
 
 $RunTime = GetRunTime $ExecutionStart (Get-Date)
 
-Initialize
 UpdateAccountCredentials
+Initialize
 
 # Begin Test Run
 
 CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
-CheckFileSystemAcesss
 CheckIfFileExists $DockScanShortcut "Dock Scan Application"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
 ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
 CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
+CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Software"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
-CheckIfFileExists ('C:\users\' + AutologonUser["KeyValue"] + $AveryConfigFile) "Avery Scale Software"
 
-$ElaspedTime = GetRunTime $(Get-Date) $ExecutionStart
+$ExecutionEnd = Get-Date
+$ElaspedTime = GetRunTime $ExecutionEnd $ExecutionStart
 $ElaspedTime
