@@ -276,8 +276,15 @@ UpdateAccountCredentials
 # Begin Test Run
 
 CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
+CheckFileSystemAcesss
+CheckIfFileExists $DockScanShortcut "Dock Scan Application"
+CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
 ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
 CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
+CheckIfFileExists ('C:\users\' + AutologonUser["KeyValue"] + $AveryConfigFile) "Avery Scale Software"
+
+$ElaspedTime = GetRunTime $(Get-Date) $ExecutionStart
+$ElaspedTime
