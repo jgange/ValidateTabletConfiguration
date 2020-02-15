@@ -210,6 +210,28 @@ Function CheckRegistryStatus($RegistryEntry, [string]$Category)
 
 }
 
+Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus)
+{
+    $CurrentServiceState = (Get-Service -DisplayName).Status
+    if ($CurrentServiceState -eq $ExpectedStatus)
+    {
+        $Result = 'Test Passed'
+        $Message = $ServiceName + ' service is running.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = $ServiceName + ' service state is ' + $CurrentServiceState + '.'
+    }
+
+    $TestName = 'Check status of service ' + $ServiceName
+    $Description = 'Checking the status of the ' + $ServiceName + ' service. It should be running.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
 
 ########## TEST FUNCTIONS ######################
 
