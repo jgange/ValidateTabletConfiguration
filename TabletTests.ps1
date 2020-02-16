@@ -337,8 +337,8 @@ Initialize
 
 # CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
 
-CheckFileSystemAccess $DockScanProgram $$AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
-CheckFileSystemAccess $DockScanLogFolder $$AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
+CheckFileSystemAccess $DockScanProgram $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
+CheckFileSystemAccess $DockScanLogFolder $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
 CheckIfFileExists $DockScanShortcut "Dock Scan Application"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
 ValidateLoggedInUser "Login Credentials"
