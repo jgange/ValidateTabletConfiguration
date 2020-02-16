@@ -246,7 +246,7 @@ Function CheckApplicationInstalled ([string] $Application, [string] $Version, [s
     else
     {
         $Result = 'Test Failed'
-        $Message = $test.DisplayName + ' version ' + $test.DisplayVersion + ' is not installed on this system.' 
+        $Message = $Application + ' version ' + $Verion + ' is not installed on this system.' 
     }
 
     $TestName = 'Check for installation of ' + $Application
