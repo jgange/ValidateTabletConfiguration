@@ -19,6 +19,8 @@ $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
 
 # Application Checks - version and installation
 
+$Applications = @(@{Name='DBeaver 5.3.5';Version='5.3.5'},@{Name='Greenshot 1.2.10.6';Version='1.2.10.6'})
+
 $DockScanAppVer = '3.4.9'
 $AveryScaleAppVer = '1.3.9'
 $RescueAssistAppVer = '1.0.0.341'
@@ -95,7 +97,7 @@ Function WriteTestResults($DataSet)
 Function GetRunTime($StartTime, $FinishTime)
 {
     $ElaspedTime = ($FinishTime - $StartTime).Seconds
-    Write-Host "Script run time was $($ElaspedTime)"
+    Write-Host "Script run time was $($ElaspedTime) second(s)."
 }
 
 
@@ -238,6 +240,31 @@ Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus, [stri
 
 }
 
+Function CheckApplicationInstalled ([string] $Application, [string] $Version, [string] $Category)
+{
+    #$test = Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall, HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | Get-ItemProperty | Where-Object {$_.DisplayName -match $Application } | Select-Object -Property DisplayName, DisplayVersion
+    $test = Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall, HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | Get-ItemProperty | Where-Object {($_.DisplayName -match $Application) -and ($_.DisplayVersion -match $Version)}
+    if ($test -ne $null)
+    {
+        $Result = 'Test Passed'
+        $Message = $test.DisplayName + ' version ' + $test.DisplayVersion + ' is installed on this system.' 
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = $test.DisplayName + ' version ' + $test.DisplayVersion + ' is not installed on this system.' 
+    }
+
+    $TestName = 'Check for installation of ' + $Application
+    $Description = 'Verify that version ' + $Version + ' of the ' + $Application + ' application is installed on this tablet.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+ 
+
 ########## TEST FUNCTIONS ######################
 
 Function ValidateLoggedInUser([string] $Category)
@@ -298,16 +325,23 @@ Function IsServiceAccountLocalUser([string] $Category)
 
 }
 
+Function ValidateTabletApps($Applications, [string] $Category)
+{
+    forEach($app in $Applications)
+    {
+        CheckApplicationInstalled $app["Name"] $app["Version"] "Application"
+    }
+}
+
 ###################### MAIN PROGRAM ####################################################
 
-
-$RunTime = GetRunTime $ExecutionStart (Get-Date)
 
 UpdateAccountCredentials
 Initialize
 
 # Begin Test Run
 
+<#
 CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
 CheckIfFileExists $DockScanShortcut "Dock Scan Application"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
@@ -318,7 +352,7 @@ CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Software"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
 CheckServiceStatus $RemoteRegistryService "Running" "RemoteAccess"
+#>
+ValidateTabletApps $Applications "Applications"
 
-$ExecutionEnd = Get-Date
-$ElaspedTime = GetRunTime $ExecutionEnd $ExecutionStart
-$ElaspedTime
+$ElaspedTime = GetRunTime $ExecutionStart (Get-Date)
