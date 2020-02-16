@@ -21,13 +21,6 @@ $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
 
 $Applications = @({Name='DockScanning Windows ';Version='3.4.9'},{Name='Microsoft SQL Server Compact 3.5 SP2 x64 ENU';Version='3.5.8080.0'},{Name='IMG My-T-Soft Basic';Version='2.30'},{Name='Microsoft SQL Server Compact 3.5 SP2 ENU';Version='3.5.8080.0'},{Name='RescueAssist by LogMeIn Unattended';Version='1.0.0.341'})
 
-$DockScanAppVer = '3.4.9'
-$AveryScaleAppVer = '1.3.9'
-$RescueAssistAppVer = '1.0.0.341'
-$MicrosoftSQLCompact64BitVer = '3.5.8080.0'
-$MicrosoftSQLCompact32BitVer = '3.5.8080.0'
-$MyTSoftAppVer = '1.90.3'
-
 # Application configuration file paths
 
 $AveryConfigFile = '\AppData\Local\Avery_Weigh-Tronix\FLS100.exe_Url_sz0xpqf3otpq0dnrfv3sqp12zh3xs51y\1.3.9.0\user.config'
@@ -64,7 +57,7 @@ $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout'
 $HostName = 'CHRT0003'
 $UserName = 'svc_dockchr'
 $TestRegistryValue = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Robert';KeyName='DefaultPassword';KeyValue='*password'}
-$Applications = @(@{Name='DBeaver 5.3.5';Version='5.3.5'},@{Name='Greenshot 1.2.10.6';Version='1.2.10.6'})
+#$Applications = @(@{Name='DBeaver 5.3.5';Version='5.3.5'},@{Name='Greenshot 1.2.10.6';Version='1.2.10.6'})
 
 ############## FUNCTION DEFINITIONS #############################################
 
