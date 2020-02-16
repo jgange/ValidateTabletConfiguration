@@ -153,7 +153,7 @@ Function CheckFileSystemAccess([string]$Folder, [string]$Account, [string]$Acces
     if ($access -match $AccessType)
     { 
         $Result = 'Test Passed'
-        $Message = 'Account ' + $Account + ' has ' + $AccessType + ' to folder ' + $Folder
+        $Message = 'Account ' + $Account + ' has ' + $AccessType + ' access to folder ' + $Folder
     }
     else
     {
