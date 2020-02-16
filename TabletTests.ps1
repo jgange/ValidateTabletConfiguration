@@ -19,7 +19,7 @@ $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
 
 # Application Checks - version and installation
 
-$Applications = @({Name='DockScanning Windows ';Version='3.4.9'},{Name='Microsoft SQL Server Compact 3.5 SP2 x64 ENU';Version='3.5.8080.0'},{Name='IMG My-T-Soft Basic';Version='2.30'},{Name='Microsoft SQL Server Compact 3.5 SP2 ENU';Version='3.5.8080.0'},{Name='RescueAssist by LogMeIn Unattended';Version='1.0.0.341'})
+$Applications = @(@{Name='DockScanning Windows ';Version='3.4.9'},@{Name='Microsoft SQL Server Compact 3.5 SP2 x64 ENU';Version='3.5.8080.0'},@{Name='IMG My-T-Soft Basic';Version='2.30'},@{Name='Microsoft SQL Server Compact 3.5 SP2 ENU';Version='3.5.8080.0'},@{Name='RescueAssist by LogMeIn Unattended';Version='1.0.0.341'})
 
 # Application configuration file paths
 
