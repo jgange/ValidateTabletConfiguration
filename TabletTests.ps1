@@ -19,7 +19,7 @@ $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
 
 # Application Checks - version and installation
 
-$Applications = @(@{Name='DBeaver 5.3.5';Version='5.3.5'},@{Name='Greenshot 1.2.10.6';Version='1.2.10.6'})
+$Applications = @({Name='DockScanning Windows ';Version='3.4.9'},{Name='Microsoft SQL Server Compact 3.5 SP2 x64 ENU';Version='3.5.8080.0'},{Name='IMG My-T-Soft Basic';Version='2.30'},{Name='Microsoft SQL Server Compact 3.5 SP2 ENU';Version='3.5.8080.0'},{Name='RescueAssist by LogMeIn Unattended';Version='1.0.0.341'})
 
 $DockScanAppVer = '3.4.9'
 $AveryScaleAppVer = '1.3.9'
@@ -64,6 +64,7 @@ $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout'
 $HostName = 'CHRT0003'
 $UserName = 'svc_dockchr'
 $TestRegistryValue = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Robert';KeyName='DefaultPassword';KeyValue='*password'}
+$Applications = @(@{Name='DBeaver 5.3.5';Version='5.3.5'},@{Name='Greenshot 1.2.10.6';Version='1.2.10.6'})
 
 ############## FUNCTION DEFINITIONS #############################################
 
