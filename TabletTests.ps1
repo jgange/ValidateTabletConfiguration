@@ -335,14 +335,16 @@ Initialize
 
 # Begin Test Run
 
-CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
+# CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
+
+CheckFileSystemAccess $DockScanProgram $$AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
+CheckFileSystemAccess $DockScanLogFolder $$AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
 CheckIfFileExists $DockScanShortcut "Dock Scan Application"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
 ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
 CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
-CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Software"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
 CheckServiceStatus $RemoteRegistryService "Running" "RemoteAccess"
 ValidateTabletApps $Applications "Applications"
