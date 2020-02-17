@@ -65,6 +65,10 @@ $OOBEDisabled = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Polic
 
 $RemoteRegistryService = 'Remote Registry'
 
+# Power Settings
+
+$PowerPlanCmd = 'powercfg /getactivescheme'
+$PowerPlan = 'Power Scheme GUID: 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c  (High performance)'
 
 # Account Information
 
@@ -512,7 +516,7 @@ Function CheckTimeZone([string] $Category)
 
     $SitePrefix = $HostName.Substring(0,4).ToLower()
     $ExpectedTimeZone = ($SiteTimeZones | Where-Object { $_.SiteName -eq $SitePrefix }).TimeZone
-    $HostTimeZone = Invoke-Command -ScriptBlock {  & cmd /c $GetTimeZone }
+    $HostTimeZone = Invoke-Command -ScriptBlock { & cmd /c $GetTimeZone }
     
     if ($ExpectedTimeZone -like $HostTimeZone)
     {
@@ -559,17 +563,46 @@ Function CheckDesktopShortcuts([string] $Category)
     WriteTestResults $DataSet
 }
 
+Function CheckPowerPlanSetting([string] $Category)
+{
+    $DataSet = @{}
+
+    $CheckPowerPlan = (Invoke-Command -ScriptBlock { & cmd /c $PowerPlanCmd }).ToString()
+
+    if ($CheckPowerPlan -like $PowerPlan)
+    {
+        $Result = 'Test Passed'
+        $Message = 'Power plan is set correctly to ' + $CheckPowerPlan + '.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Power plan is set to ' + $CheckPowerPlan + ', should be set to ' + $PowerPlan + '.'
+    }
+    
+    $TestName = 'Power Plan Setting'
+    $Description = 'Power plan should be set to High Performance on the tablet.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+}
+
+Function CheckKeyMaps([string] $Category)
+{
+
+
+}
 
 
 ###################### MAIN PROGRAM ####################################################
 
+# Perform initialization of run time variables
 
 UpdateAccountCredentials
 Initialize
 
 # Begin Test Run
-
-# CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
 
 <#
 CheckFileSystemAccess $DockScanProgram $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
@@ -594,9 +627,9 @@ ValidateOnScreenKeyboardSettings "Keyboard and Display Settings"
 AutoUpdateAndOOBEDisabled "AutoUpdates and OOBE"
 CheckFireWallStatus "Security Settings"
 CheckTimeZone "Time zone setting"
-#>
-
 CheckDesktopShortcuts "Desktop Shortcuts"
+CheckPowerPlanSetting "Power Plan"
+#>
 
 $CompletionTime = Get-Date
 GetRunTime $ExecutionStart $CompletionTime
