@@ -16,6 +16,8 @@ $LocalGroupName = 'Administrators'
 $StagingFolder = 'C:\Staging\'
 $ResultsFile = $StagingFolder + $HostName + '_DockAutoTests.csv'
 $StartUpFolder = 'C:\ProgramData\Microsoft\Windows\Start Menu\Programs\StartUp\'
+$Desktop = 'C:\Users\Public\Desktop\'
+$SCCMClientLogs = 'C:\Windows\CCM\Logs\'
 
 # Application Checks - version and installation
 
@@ -23,12 +25,16 @@ $Applications = @(@{Name='DockScanning Windows ';Version='3.4.9'},@{Name='Micros
 
 # Application configuration file paths
 
+$DockScan = 'DockScanning Windows.lnk'
+$AveryScale = 'FLS100.lnk'
 $AveryConfigFile = '\AppData\Local\Avery_Weigh-Tronix\FLS100.exe_Url_sz0xpqf3otpq0dnrfv3sqp12zh3xs51y\1.3.9.0\user.config'
 $DockScanProgram = 'C:\Program Files\DockScanning Windows Manufacturer\DockScanning Windows\'
 $DockScanLogFolder = 'C:\Program Files\DockScanning Windows Manufacturer\DockScanning Windows\Logs\'
 $AveryDB = 'C:\ProgramData\Avery Weigh-Tronix\FLS 100\1.3.9.0\'
 $DockScanShortcut = $StartUpFolder + 'DockScanning Windows.lnk'
 $AveryScaleAppShortcut = $StartUpFolder + 'FLS100.lnk'
+$DockScanDesktop = $Desktop + $DockScan
+$AveryDesktop = $Desktop + $AveryScale
 
 # Registry Key Values -- * indicates a replacement is going to occur such as a user name or password
 
@@ -38,6 +44,21 @@ $AutoLogonAccount = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersio
 $AutoLogonPassword = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon';KeyName='DefaultPassword';KeyValue='*password'}
 
 $ScannerPortEnabled = @{RegPath='HKLM:SOFTWARE\Wow6432Node\Intermec\ADCPorts\2';KeyName='State';KeyValue=1}
+
+$DisableKeyAudioFeedback = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='EnableKeyAudioFeedback';KeyValue='0'}
+$DisableAutoShiftEngage = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='EnableAutoShiftEngage';KeyValue='0'}
+$DisableHideEdgeTabOnPenOutofRange = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='HideEdgeTabOnPenOutOfRange';KeyValue='0'}
+$DisableTextPrediction = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='EnableTextPrediction';KeyValue='0'}
+$DisablePredicionScapeInsertion = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='EnablePredictionSpaceInsertion';KeyValue='0'}
+$DisableDoubleTapSpace = @{RegPath='HKCU:Software\Microsoft\TabletTip\1.7';KeyName='EnableDoubleTapSpace';KeyValue='0'}
+
+$DisableTabletMode = @{RegPath='HKLM:SOFTWARE\Microsoft\Windows\CurrentVersion\ImmersiveShell';KeyName='Tablet Mode';KeyValue='0'}
+
+$SetAutoUpdateOptions = @{RegPath='HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU';KeyName='AUOptions';KeyValue='2'}
+$DisableAutoUpdates = @{RegPath='HKLM:\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate\AU';KeyName='NoAutoUpdate';KeyValue='1'}
+
+$OOBEDisabled = @{RegPath='HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System';KeyName='EnableFirstLogonAnimation';KeyValue='0'}
+
 
 # Running services
 
@@ -50,7 +71,16 @@ $Logons = @('svc_dockatl','svc_dockchi','svc_dockchr','svc_dockcin','svc_dockclv
 $Pswds = @('hG#xh7GaS2VLLYenOdWLvgDs28BJPJ9y','B59jdq6e45V63PhpvAnEaAAUn3WFDX','gn1MjmCJVW8LY2PQDs44GsRL2wHE0t','aRCbNN7sjT2mMdaFambLL8yo5EDvZt','mweMXzfmjofPKQ7gaFP5Yc01MR7q9z','fDs=^J^)rPk@6Unth_zY0xhKc:a0Z:D6','3JAcCk8BHEcV0xodg3YykWepKGTk5q','uuWgjY={=ki3','R1853:A*feR58kH','7ubohwWsWfYy','5eo9cHsjxFf7x022RTwnQzQi2FbPqV','d!UMMn6Tb^dC','EquPh4WhwnahGCpjBcEpocsAA4n37x','R1853:A*feR58kH','WUu1zdKdgw5CXJ7cAgwQCbsogaucJC','Uhd79e6EDshKT2rjbvTFbpbTG7vYFs','r1VkNEarBzTQfJwrN1C9oj1L7Q93RJ','EDE5oTvQw5KEFtp0A0VpRWu7tgcsb9','NzhC1Ec97v1GyFMfa5rF2rxxPXWs9g','G29tCJkzdg8PbZKwYbWX5rZcag68kf')
 $LocalAdminUsers = @('LAX_ADMIN','DOCK_ADMIN','MKE_ADMIN')
 $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout','indt','laxt','lout','mket','mpst','nsht','seat','sfst','stlt','stpt')
+$SiteTimeZones = @(@{SiteName='';TimeZone=''},{})
 
+
+# SCCM Client
+
+$ClientIDLogs = $SCCMClientLogs + 'ClientIDManagerStartup*.log'
+
+# Performance
+
+$WindowsDefenderMaxCPU = '5'
 
 # Testing Data to override variables
 
@@ -75,6 +105,12 @@ Function Initialize()
 
     $Global:AveryConfigFile = 'C:\Users\' + $AutoLogonAccount["KeyValue"] + $Global:AveryConfigFile
 
+    (get-item 'C:\Windows\ccm\Logs\ClientIDManagerStartup*').Name | ForEach-Object { $SCCMClientIDLogs += $SCCMClientLogs + $_.Name }
+
+    $ClientIDLogs = $SCCMClientLogs | ForEach-Object {(get-item 'C:\Windows\ccm\Logs\ClientIDManagerStartup*').Name}
+
+    
+    
     
     # Other initialization code here
 
@@ -213,6 +249,9 @@ Function CheckRegistryStatus($RegistryEntry, [string]$Category)
 
 Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus, [string]$Category)
 {
+    
+    $DataSet = @{}
+    
     $CurrentServiceState = (Get-Service -DisplayName $ServiceName).Status
     if ($CurrentServiceState -eq $ExpectedStatus)
     {
@@ -236,6 +275,9 @@ Function CheckServiceStatus([string]$ServiceName, [string]$ExpectedStatus, [stri
 
 Function CheckApplicationInstalled ([string] $Application, [string] $Version, [string] $Category)
 {
+
+    $DataSet = @{}
+
     #$test = Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall, HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | Get-ItemProperty | Where-Object {$_.DisplayName -match $Application } | Select-Object -Property DisplayName, DisplayVersion
     $test = Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall, HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall | Get-ItemProperty | Where-Object {($_.DisplayName -match $Application) -and ($_.DisplayVersion -match $Version)}
     if ($test -ne $null)
@@ -263,6 +305,9 @@ Function CheckApplicationInstalled ([string] $Application, [string] $Version, [s
 
 Function ValidateLoggedInUser([string] $Category)
 {
+
+    $DataSet = @{}
+
     if ($UserName -match $LocalAdminUsers)
     {
         $Result = 'Test Failed'
@@ -298,6 +343,8 @@ Function ValidateAutoLoginStatus([string] $Category)
 
 Function IsServiceAccountLocalUser([string] $Category)
 {
+    $DataSet = @{}
+
     try
     {
         Get-LocalGroupMember -Group $LocalGroupName -Member $AutoLogonAccount["KeyValue"] -ErrorAction Stop
@@ -327,6 +374,135 @@ Function ValidateTabletApps($Applications, [string] $Category)
     }
 }
 
+
+Function CheckWirelessAdapter([string] $Category)
+{
+ 
+    $DataSet = @{}
+
+    $Interface = Get-NetAdapter | Where-Object { $_.Name -eq 'Wi-Fi'}
+
+    if ($Interface.Status -eq 'Up')
+    {
+        $Result = 'Test Passed'
+        $Message = 'Interface ' + $Interface.InterfaceDescription + ' is ' + $Interface.Status + '.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Interface ' + $Interface.InterfaceDescription + ' is ' + $Interface.Status + '.'
+    }
+
+    $TestName = 'Check Wireless Interface status.'
+    $Description = 'Check if the Wireless Interface is up.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+
+Function CheckWindowsDefenderThrottle ([string] $Category)
+{
+
+    $DataSet = @{}
+
+    $MaxCPULoad = (Get-MpPreference).ScanAvgCPULoadFactor
+    If ($MaxCPULoad -eq $WindowsDefenderMaxCPU)
+    {
+        $Result = 'Test Passed'
+        $Message = 'The Maximum CPU load for Windows Defender is set to ' + $MaxCPULoad
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'The Maximum CPU load for Windows Defender is set to ' + $MaxCPULoad + '.'
+    }
+
+    $TestName = 'Check Windows Defender Max CPU load'
+    $Description = 'Check Windows Defender Max CPU load value.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+}
+
+
+Function CheckSCCMClientRegistration ([string] $Category)
+{
+ 
+ $DataSet = @{}
+
+ $CheckString = "\[RegTask] - Client is registered. Exiting."
+ $GetClientRegistration = Select-String -path $ClientIDLogs -Pattern $CheckString
+ 
+  If ($GetClientRegistration)
+    {
+        $Result = 'Test Passed'
+        $Message = 'Client is registered. ' + $GetClientRegistration
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Client is not registered.'
+    }
+
+    $TestName = 'Check if SCCM Client is registered with the server'
+    $Description = 'Check the ClientIDLog files in the SCCM client folder to see if the client has been registered with the server.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+
+Function ValidateOnScreenKeyboardSettings([string] $Category)
+{
+    CheckRegistryStatus $DisableKeyAudioFeedback "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisableAutoShiftEngage "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisableHideEdgeTabOnPenOutofRange "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisableTextPrediction "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisablePredicionScapeInsertion "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisableDoubleTapSpace "On Screen KeyBoard" | Out-Null
+    CheckRegistryStatus $DisableTabletMode "Tablet Display Mode" | Out-Null
+}
+
+Function AutoUpdateAndOOBEDisabled([string] $Category)
+{
+    CheckRegistryStatus $SetAutoUpdateOptions "Disable AutoUpdate" | Out-Null 
+    CheckRegistryStatus $DisableAutoUpdates "Disable AutoUpdate" | Out-Null
+    CheckRegistryStatus $OOBEDisabled "Disable OOBE" | Out-Null
+}
+
+Function CheckFirewallStatus([string] $Category)
+{
+    $DataSet = @{}
+    $Flag = 0
+
+    $FireWallStatus = Get-NetFirewallProfile | Select-Object Name,Enabled   
+    $FireWallStatus | ForEach-Object { if ($_.Enabled -eq 'True') {$Flag++} }
+    
+    If ($Flag -eq 0)
+    {
+        $Result = 'Test Passed'
+        $Message = 'Firewall is disabled for each zone.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Firewall is enabled for the following zones-- ' + ($FireWallStatus | ForEach-Object {$_.Name + ':' + $_.Enabled})
+    }
+
+    $TestName = 'Check Windows Firewall Status'
+    $Description = 'Checks if the Windows Firewall is enabled for any of the zones.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+}
+
+
+
 ###################### MAIN PROGRAM ####################################################
 
 
@@ -339,8 +515,11 @@ Initialize
 
 CheckFileSystemAccess $DockScanProgram $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
 CheckFileSystemAccess $DockScanLogFolder $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
+CheckFileSystemAccess $AveryDB $AutoLogonAccount["KeyValue"] "FullControl" "Avery Scale Application" | Out-Null
 CheckIfFileExists $DockScanShortcut "Dock Scan Application"
 CheckIfFileExists $AveryScaleAppShortcut "Avery Scale Application"
+CheckIfFileExists $DockScanDesktop "Dock Scan Application"
+CheckIfFileExists $AveryDesktop "Avery Scale Application"
 ValidateLoggedInUser "Login Credentials"
 IsServiceAccountLocalUser "Security"
 ValidateAutoLoginStatus "Autologon"
@@ -348,5 +527,13 @@ CheckRegistryStatus $ScannerPortEnabled "Bar Code Scanner"
 CheckIfFileExists $AveryConfigFile "Avery Scale Software"
 CheckServiceStatus $RemoteRegistryService "Running" "RemoteAccess"
 ValidateTabletApps $Applications "Applications"
+CheckWirelessAdapter "Wireless"
+CheckWindowsDefenderThrottle "Performance"
+CheckRegistryStatus $OOBEDisabled "Performance"
+CheckSCCMClientRegistration "SCCM Client"
+ValidateOnScreenKeyboardSettings "Keyboard and Display Settings"
+AutoUpdateAndOOBEDisabled "AutoUpdates and OOBE"
+CheckFireWallStatus "Security Settings"
 
-$ElaspedTime = GetRunTime $ExecutionStart (Get-Date)
+$CompletionTime = Get-Date
+GetRunTime $ExecutionStart $CompletionTime
