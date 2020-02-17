@@ -27,6 +27,7 @@ $Applications = @(@{Name='DockScanning Windows ';Version='3.4.9'},@{Name='Micros
 
 $DockScan = 'DockScanning Windows.lnk'
 $AveryScale = 'FLS100.lnk'
+$TSoft = 'My-T-Soft Basic.lnk'
 $AveryConfigFile = '\AppData\Local\Avery_Weigh-Tronix\FLS100.exe_Url_sz0xpqf3otpq0dnrfv3sqp12zh3xs51y\1.3.9.0\user.config'
 $DockScanProgram = 'C:\Program Files\DockScanning Windows Manufacturer\DockScanning Windows\'
 $DockScanLogFolder = 'C:\Program Files\DockScanning Windows Manufacturer\DockScanning Windows\Logs\'
@@ -71,7 +72,7 @@ $Logons = @('svc_dockatl','svc_dockchi','svc_dockchr','svc_dockcin','svc_dockclv
 $Pswds = @('hG#xh7GaS2VLLYenOdWLvgDs28BJPJ9y','B59jdq6e45V63PhpvAnEaAAUn3WFDX','gn1MjmCJVW8LY2PQDs44GsRL2wHE0t','aRCbNN7sjT2mMdaFambLL8yo5EDvZt','mweMXzfmjofPKQ7gaFP5Yc01MR7q9z','fDs=^J^)rPk@6Unth_zY0xhKc:a0Z:D6','3JAcCk8BHEcV0xodg3YykWepKGTk5q','uuWgjY={=ki3','R1853:A*feR58kH','7ubohwWsWfYy','5eo9cHsjxFf7x022RTwnQzQi2FbPqV','d!UMMn6Tb^dC','EquPh4WhwnahGCpjBcEpocsAA4n37x','R1853:A*feR58kH','WUu1zdKdgw5CXJ7cAgwQCbsogaucJC','Uhd79e6EDshKT2rjbvTFbpbTG7vYFs','r1VkNEarBzTQfJwrN1C9oj1L7Q93RJ','EDE5oTvQw5KEFtp0A0VpRWu7tgcsb9','NzhC1Ec97v1GyFMfa5rF2rxxPXWs9g','G29tCJkzdg8PbZKwYbWX5rZcag68kf')
 $LocalAdminUsers = @('LAX_ADMIN','DOCK_ADMIN','MKE_ADMIN')
 $Sites = @('atlt','chit','chrt','cint','clvt','comt','dett','dlst','dowt','hout','indt','laxt','lout','mket','mpst','nsht','seat','sfst','stlt','stpt')
-$SiteTimeZones = @(@{SiteName='';TimeZone=''},{})
+$SiteTimeZones = @(@{SiteName='atlt';TimeZone='Eastern Standard Time'},@{SiteName='chit';TimeZone='Central Standard Time'},@{SiteName='chrt';TimeZone='Eastern Standard Time'},@{SiteName='cint';TimeZone='Eastern Standard Time'},@{SiteName='comt';TimeZone='Pacific Standard Time'},@{SiteName='dett';TimeZone='Eastern Standard Time'},@{SiteName='dlst';TimeZone='Central Standard Time'},@{SiteName='dowt';TimeZone='Central Standard Time'},@{SiteName='hout';TimeZone='Central Standard Time'},@{SiteName='indt';TimeZone='Eastern Standard Time'},@{SiteName='laxt';TimeZone='Pacific Standard Time'},@{SiteName='lout';TimeZone='Central Standard Time'},@{SiteName='mket';TimeZone='Central Standard Time'},@{SiteName='mpst';TimeZone='Central Standard Time'},@{SiteName='nsht';TimeZone='Central Standard Time'},@{SiteName='seat';TimeZone='Pacific Standard Time'},@{SiteName='sfst';TimeZone='Pacific Standard Time'},@{SiteName='stlt';TimeZone='Central Standard Time'},@{SiteName='stpt';TimeZone='Central Standard Time'})
 
 
 # SCCM Client
@@ -81,6 +82,10 @@ $ClientIDLogs = $SCCMClientLogs + 'ClientIDManagerStartup*.log'
 # Performance
 
 $WindowsDefenderMaxCPU = '5'
+
+# Shell Commands
+
+$GetTimeZone = "tzutil /g"
 
 # Testing Data to override variables
 
@@ -501,6 +506,59 @@ Function CheckFirewallStatus([string] $Category)
     WriteTestResults $DataSet
 }
 
+Function CheckTimeZone([string] $Category)
+{
+    $DataSet = @{}
+
+    $SitePrefix = $HostName.Substring(0,4).ToLower()
+    $ExpectedTimeZone = ($SiteTimeZones | Where-Object { $_.SiteName -eq $SitePrefix }).TimeZone
+    $HostTimeZone = Invoke-Command -ScriptBlock {  & cmd /c $GetTimeZone }
+    
+    if ($ExpectedTimeZone -like $HostTimeZone)
+    {
+        $Result = 'Test Passed'
+        $Message = 'Timezone is correctly set on the host machine to ' + $ExpectedTimeZone + ' for site ' + $SitePrefix.ToUpper() + '.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Timezone is set to ' + $HostTimeZone + ' on the host machine, should be set to ' + $ExpectedTimeZone + ' for site ' + $SitePrefix.ToUpper() + '.'
+    }
+
+    $TestName = 'Check Time zone'
+    $Description = 'Checks if the timezone is set correctly based on the site.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+
+}
+
+Function CheckDesktopShortcuts([string] $Category)
+{
+    $DataSet = @{}
+
+    $Shortcuts = ( (Test-Path -Path ($Desktop + $AveryScale)) -and (Test-Path -Path ($Desktop + $DockScan)) -and (Test-Path -Path ($Desktop + $TSoft)) )
+
+    if ($Shortcuts)
+    {
+        $Result = 'Test Passed'
+        $Message = 'Dock Scan, Avery Scale and My T-Soft shortcuts are present on the public desktop.'
+    }
+    else
+    {
+        $Result = 'Test Failed'
+        $Message = 'Dock Scan, Avery Scale and My T-Soft shortcuts are not all on the public desktop.'
+    }
+    
+    $TestName = 'Check for proper shortcuts on desktop'
+    $Description = 'Checks if the expected shortcuts are on the desktop for all users.'
+    $TimeStamp = Get-Date
+
+    $DataSet = [ordered]@{'TestName'=$TestName;'Result'=$Result;'Timestamp'=$TimeStamp;'Message'=$Message;'Description'=$Description;'Category'=$Category}
+    WriteTestResults $DataSet
+}
+
 
 
 ###################### MAIN PROGRAM ####################################################
@@ -513,6 +571,7 @@ Initialize
 
 # CheckFileSystemAccess "C:\Users\a-joe.gange" "v-jgange" "FullControl" "Application" | Out-Null
 
+<#
 CheckFileSystemAccess $DockScanProgram $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
 CheckFileSystemAccess $DockScanLogFolder $AutoLogonAccount["KeyValue"] "Modify" "Dock Scan Application" | Out-Null
 CheckFileSystemAccess $AveryDB $AutoLogonAccount["KeyValue"] "FullControl" "Avery Scale Application" | Out-Null
@@ -534,6 +593,10 @@ CheckSCCMClientRegistration "SCCM Client"
 ValidateOnScreenKeyboardSettings "Keyboard and Display Settings"
 AutoUpdateAndOOBEDisabled "AutoUpdates and OOBE"
 CheckFireWallStatus "Security Settings"
+CheckTimeZone "Time zone setting"
+#>
+
+CheckDesktopShortcuts "Desktop Shortcuts"
 
 $CompletionTime = Get-Date
 GetRunTime $ExecutionStart $CompletionTime
